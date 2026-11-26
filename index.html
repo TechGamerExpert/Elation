@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Elation</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Comic+Neue:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+:root { --font-comic: "Comic Sans MS", "Comic Neue", cursive, sans-serif; --font-papyrus: "Papyrus", "Cinzel Decorative", fantasy, serif; }
+* { box-sizing: border-box }
+body { margin: 0; font-family: var(--font-comic); background: repeating-linear-gradient(45deg, #ff2d20 0 60px, #fff5f2 60px 120px); background-color: #ff2d20; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; overflow-x: hidden; position: relative }
+.container { position: relative; z-index: 1; width: 90%; max-width: 900px; text-align: center }
+h1 { font-family: var(--font-papyrus); font-size: 2.8rem; margin: 0 0 1rem; color: #7a0c00; text-shadow: 2px 2px 0 #ffd700, 4px 4px 0 rgba(0,0,0,0.2); font-weight: normal; font-style: italic }
+.subtitle { font-size: 1.2rem; color: #5c0a00; margin-bottom: 3rem }
+.fun-grid { display: flex; flex-wrap: wrap; gap: 1.5rem; justify-content: center; margin-bottom: 3rem }
+.fun-card { background: rgba(255,255,255,0.85); border: 4px solid #7a0c00; border-radius: 20px; padding: 1rem; width: 150px; transition: transform .3s }
+.fun-card:hover { transform: rotate(8deg) scale(1.05) }
+.emoji { font-size: 3rem; display: block; margin-bottom: .5rem }
+.fun-fact { font-size: .9rem; color: #333 }
+.continue-btn { margin-top: 3rem; padding: 1rem 2.5rem; font-size: 1.4rem; font-family: var(--font-papyrus); background: #ffd700; color: #7a0c00; border: 4px solid #7a0c00; border-radius: 40px; cursor: pointer; box-shadow: 0 6px 0 #7a0c00; transition: transform .1s }
+.continue-btn:active { transform: translateY(6px); box-shadow: 0 0 0 #7a0c00 }
+.discord-form { margin-top: 4rem; max-width: 400px; width: 90%; text-align: left }
+.discord-form h2 { font-family: var(--font-papyrus); margin-top: 0; color: #7a0c00; font-size: 1.5rem }
+.discord-form input { width: 100%; padding: .8rem; margin: .6rem 0; font-size: 1rem; border: 2px dashed #7a0c00; border-radius: 12px; background: rgba(255,255,255,0.8); color: #333; font-family: inherit }
+.discord-form button { width: 100%; padding: .9rem; font-size: 1.1rem; font-family: var(--font-papyrus); background: #2d0f3c; color: #ffd700; border: 3px solid #ffd700; border-radius: 20px; cursor: pointer }
+.discord-form button:active { transform: translateY(2px) }
+.link-display { margin-top: 2rem; font-size: 1.1rem; color: #5c0a00 }
+.link-display a { color: #ffd700; text-decoration: none; font-weight: bold }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>hello. you don't know who i am.</h1>
+  <div class="subtitle">welcome to the elation</div>
+  <div class="fun-grid" id="funGrid"></div>
+  <button class="continue-btn" id="continueBtn">step further.</button>
+</div>
+<div class="discord-form" id="formSection" style="display:none;">
+  <h2>tell me who you are</h2>
+  <form id="nameForm"><input type="text" id="playerName" placeholder="your name" required /><input type="text" id="discordIgn" placeholder="your discord IGN" required /><button type="submit">send to the elation</button></form>
+  <div class="link-display" id="linkDisplay"></div>
+</div>
+<script>
+let audioCtx = null;
+
+function playFunnySound() {
+  try {
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContextClass) return;
+    if (!audioCtx) audioCtx = new AudioContextClass();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    const now = audioCtx.currentTime;
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(150, now);
+    osc.frequency.exponentialRampToValueAtTime(900, now + 0.15);
+    osc.frequency.exponentialRampToValueAtTime(120, now + 0.35);
+    gain.gain.setValueAtTime(0.3, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+    osc.start(now);
+    osc.stop(now + 0.45);
+  } catch (e) {
+    console.warn('Audio not available:', e);
+  }
+}
+
+let facts = [];
+
+function createFactCard({ emoji, fact }) {
+  const card = document.createElement('div');
+  card.className = 'fun-card';
+  const emojiSpan = document.createElement('span');
+  emojiSpan.className = 'emoji';
+  emojiSpan.textContent = emoji;
+  const factDiv = document.createElement('div');
+  factDiv.className = 'fun-fact';
+  factDiv.textContent = fact;
+  card.append(emojiSpan, factDiv);
+  return card;
+}
+
+fetch('facts.csv').then(r => {
+  if (!r.ok) throw new Error('HTTP ' + r.status);
+  return r.text();
+}).then(t => {
+  facts = t.trim().split(/\r?\n/).slice(1)
+    .map(line => line.trim())
+    .filter(Boolean)
+    .map(line => {
+      const commaIdx = line.indexOf(',');
+      if (commaIdx === -1) return { emoji: '🔮', fact: line };
+      return {
+        emoji: line.slice(0, commaIdx).trim() || '🔮',
+        fact: line.slice(commaIdx + 1).trim()
+      };
+    });
+  const funGrid = document.getElementById('funGrid');
+  if (!funGrid) return;
+  if (facts.length === 0) {
+    funGrid.textContent = 'No facts available.';
+  } else {
+    funGrid.replaceChildren(...facts.map(createFactCard));
+  }
+}).catch(err => {
+  console.error('Failed to load facts:', err);
+  const funGrid = document.getElementById('funGrid');
+  if (funGrid) funGrid.textContent = 'loading...';
+});
+
+function pickRandomFact() {
+  const el = document.querySelector('.fun-grid');
+  if (!el) return;
+  if (!facts.length) {
+    el.textContent = 'loading...';
+    return;
+  }
+  const idx = Math.floor(Math.random() * facts.length);
+  el.replaceChildren(createFactCard(facts[idx]));
+}
+
+document.getElementById('continueBtn').addEventListener('click', () => {
+  playFunnySound();
+  pickRandomFact();
+  document.getElementById('formSection').style.display = 'block';
+});
+
+document.getElementById('nameForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const submitBtn = e.currentTarget.querySelector('button[type="submit"]');
+  if (submitBtn) submitBtn.disabled = true;
+
+  const name = document.getElementById('playerName').value.trim();
+  const ign = document.getElementById('discordIgn').value.trim();
+  const webhookUrl = 'https://discord.com/api/webhooks/1572957542441558056/rUl_MDYk-uVC3AFikEt15YJZtvMGbsKef41kmyDbILFZSDeDFjefXDR9c0-mbwO0JRDq';
+  const payload = {
+    embeds: [
+      {
+        title: `The Elation`,
+        description: `A new soul has wandered in.`,
+        color: 0xffd700,
+        fields: [
+          {
+            name: `Player`,
+            value: name,
+            inline: true
+          },
+          {
+            name: `Discord IGN`,
+            value: ign,
+            inline: true
+          }
+        ],
+        footer: {
+          text: `The Elation`
+        }
+      }
+    ]
+  };
+
+  try {
+    const resp = await fetch(webhookUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!resp.ok) throw new Error('webhook error: ' + resp.status);
+  } catch (err) {
+    console.error('failed to send to discord:', err);
+  }
+
+  const linkDisplay = document.getElementById('linkDisplay');
+  linkDisplay.innerHTML = 'save this link and return later: <a href="starting.html" style="color:#ffd700;">starting.html</a><br/><em>do not log in again — that is not very elating :<.</em>';
+  document.getElementById('formSection').style.display = 'block';
+  document.getElementById('nameForm').style.display = 'none';
+});
+</script>
+</body>
+</html>
