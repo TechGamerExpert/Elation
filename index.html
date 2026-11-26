@@ -84,6 +84,15 @@ function createFactCard({ emoji, fact }) {
   return card;
 }
 
+function pickRandomFacts(list, count) {
+  const copy = list.slice();
+  for (let i = copy.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+  return copy.slice(0, count);
+}
+
 fetch('facts.csv').then(r => {
   if (!r.ok) throw new Error('HTTP ' + r.status);
   return r.text();
@@ -104,7 +113,7 @@ fetch('facts.csv').then(r => {
   if (facts.length === 0) {
     funGrid.textContent = 'No facts available.';
   } else {
-    funGrid.replaceChildren(...facts.map(createFactCard));
+    funGrid.replaceChildren(...pickRandomFacts(facts, 10).map(createFactCard));
   }
 }).catch(err => {
   console.error('Failed to load facts:', err);
