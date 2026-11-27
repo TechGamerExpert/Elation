@@ -178,6 +178,26 @@ audio {
   line-height: 1.65;
   color: #f3e8ff;
 }
+.popup-image-box {
+  display: none;
+  margin: 0 auto 1.4rem;
+  padding: 0.85rem;
+  background: rgba(255, 255, 255, 0.04);
+  border: 2px dashed #ffd700;
+  border-radius: 16px;
+  box-shadow: 0 0 24px rgba(192, 132, 252, 0.25), inset 0 0 14px rgba(255, 215, 0, 0.12);
+}
+.popup-image-box.visible {
+  display: block;
+}
+.popup-image-box img {
+  display: block;
+  width: 100%;
+  max-height: 290px;
+  object-fit: contain;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 215, 0, 0.35);
+}
 
 /* FX & Finale void screen */
 .fx-layer {
@@ -314,6 +334,9 @@ audio {
   <div class="popup-card">
     <h2 id="popupTitle"></h2>
     <p id="popupMessage"></p>
+    <div class="popup-image-box" id="popupImageBox">
+      <img id="popupImage" src="" alt="transmission reward" />
+    </div>
     <button type="button" class="btn" id="popupClose">close</button>
   </div>
 </div>
@@ -343,8 +366,13 @@ const BRANCH_A = {
 };
 const BRANCH_B = {
   salt: 'elation-p4-b-salt',
-  tag: 'aWu1ESLWAZ6MSxSnn0z8Raf3M6SFmtCeWmWeDCnsO3w=',
-  ct: 'IQbLi9S/wi8a1mxQhBoaldfpV4NISrQus9DQ4GVTctsmNJLRsXEH72vcrjjb6+GjTzEoHMbqkLsT3xp2n8VREUaIPjdYQXtfjGe2aKgD3g1qxs+j7J9CTBhDOUBg+Jtj/2oDTfR5gDM='
+  tag: '08ErkYS2rC0G+V80oxN1HxSfd/3rP2/MVkruSpy03uE=',
+  ct: 'AjWyJTTRbbedKTOVa8tWzu+8Vs9QFKNc4E2upkqJwokQ+nUEOXn0mRVGf+Ydv6bzrHbZUnU8FXPWBtJpz3J913tQ1p1tBoGK/1WBzszdlqbSBti20itzR22d98Lii/NEmGA6Yai7eB93fAj1fdhaC/O8xlgAumOh3TT64d+sLp6BryY='
+};
+const BRANCH_C = {
+  salt: 'elation-p4-c-salt',
+  tag: 'tj6xTgdVfZKIydnBo27Kuy9ee21G/Y9dBK5d9C1OPUs=',
+  ct: 'XwP4isSN94tdmgDmmeYxLj6BRUAfOsAKVcWHNGh2GXdPExM4n/95nD9vVBsVQevfWSSJdAk+8xiSKe+JG/Ssd0TFvxdSifVgFn4CUlDvgno+YrRg'
 };
 const FINAL_FACT_SALT = 'elation-p4-final-salt';
 const FINAL_FACT_HASHES = [
@@ -507,6 +535,8 @@ const statusMsg = document.getElementById('statusMsg');
 const popupBackdrop = document.getElementById('popupBackdrop');
 const popupTitle = document.getElementById('popupTitle');
 const popupMessage = document.getElementById('popupMessage');
+const popupImageBox = document.getElementById('popupImageBox');
+const popupImage = document.getElementById('popupImage');
 const popupClose = document.getElementById('popupClose');
 const fxLayer = document.getElementById('fxLayer');
 const voidScreen = document.getElementById('voidScreen');
@@ -612,6 +642,13 @@ finalFactForm.addEventListener('submit', async (e) => {
 function openPopup(data) {
   popupTitle.textContent = data.title;
   popupMessage.textContent = data.message;
+  if (data.image) {
+    popupImage.src = data.image;
+    popupImageBox.classList.add('visible');
+  } else {
+    popupImage.removeAttribute('src');
+    popupImageBox.classList.remove('visible');
+  }
   popupBackdrop.classList.add('open');
 }
 
@@ -639,12 +676,14 @@ answerForm.addEventListener('submit', async (e) => {
     const branchA = await tryDecrypt(raw.toLowerCase(), BRANCH_A);
     if (branchA) {
       statusMsg.textContent = '';
-      openPopup(branchA);
+      openPopup({
+        title: branchA.title,
+        message: 'Commit yourselves to the travel, and reach where this shows : -3750,141,293'
+      });
       return;
     }
 
-    const normalized = raw.replace(/\uFE0F/g, '');
-    const branchB = await tryDecrypt(normalized, BRANCH_B);
+    const branchB = await tryDecrypt(raw.trim().toLowerCase(), BRANCH_B);
     if (branchB) {
       statusMsg.textContent = '';
       answerForm.style.display = 'none';
@@ -652,6 +691,14 @@ answerForm.addEventListener('submit', async (e) => {
       rainFinale(branchB.icons);
       await sleep(2100);
       await showFinale(branchB);
+      return;
+    }
+
+    const normalizedEmoji = raw.replace(/️/g, '');
+    const branchC = await tryDecrypt(normalizedEmoji, BRANCH_C);
+    if (branchC) {
+      statusMsg.textContent = '';
+      openPopup(branchC);
       return;
     }
 
