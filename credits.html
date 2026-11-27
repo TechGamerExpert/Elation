@@ -79,7 +79,7 @@ h1 {
   background: rgba(255, 215, 0, 0.07);
   border: 2px solid rgba(255, 215, 0, 0.55);
   border-radius: 18px;
-  padding: 1.6rem 1.4rem;
+  padding: 1.8rem 1.6rem;
   opacity: 0;
   transform: translateY(10px);
   transition: opacity 0.8s ease, transform 0.8s ease;
@@ -92,17 +92,48 @@ h1 {
 }
 .credits-card h2 {
   font-family: var(--font-papyrus);
-  margin: 0 0 0.75rem;
+  margin: 0 0 1rem;
   color: #ffd700;
-  font-size: 1.45rem;
+  font-size: 1.5rem;
 }
-.credits-card p {
-  margin: 0.4rem 0;
-  line-height: 1.65;
+.credit-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  text-align: left;
+  max-width: 560px;
+  margin: 0 auto;
+}
+.credit-item {
+  background: rgba(255, 255, 255, 0.04);
+  border-left: 3px solid #ffd700;
+  border-radius: 10px;
+  padding: 0.65rem 0.95rem;
+  line-height: 1.55;
   color: #f3e8ff;
 }
+.credit-role {
+  color: #ffd700;
+  font-weight: bold;
+}
+.credit-note {
+  color: #c084fc;
+  font-style: italic;
+}
+.thanks-banner {
+  margin: 1.4rem auto 0;
+  max-width: 560px;
+  padding: 0.95rem 1.2rem;
+  background: radial-gradient(circle at center, rgba(192, 132, 252, 0.16) 0%, rgba(255, 215, 0, 0.08) 100%);
+  border: 2px dashed #ffd700;
+  border-radius: 14px;
+  font-family: var(--font-papyrus);
+  font-size: 1.15rem;
+  color: #ffd700;
+  text-shadow: 0 0 12px rgba(255, 215, 0, 0.35);
+}
 .btn {
-  margin-top: 1.75rem;
+  margin-top: 1.5rem;
   padding: 0.85rem 2rem;
   font-size: 1.05rem;
   font-family: var(--font-papyrus);
@@ -134,21 +165,33 @@ h1 {
     <div class="speech-text"><span id="elationTyped"></span><span class="cursor" id="elationCursor"></span></div>
   </div>
 
-  <!-- EDIT CREDITS PLACEHOLDER TEXT BELOW -->
   <div class="credits-card" id="creditsCard">
     <h2>credits</h2>
-    <p>[Placeholder] Made with chaos and laughter.</p>
-    <p>[Placeholder] Special thanks to everyone in the server.</p>
+    <div class="credit-list">
+      <div class="credit-item">
+        <span class="credit-role">Art:</span> Who else but the glorious ME, <strong>TechGamerExpert</strong>
+      </div>
+      <div class="credit-item">
+        <span class="credit-role">Puzzle:</span> Who else but another GLORIOUS me, with the help of <strong>@geethaaa</strong>
+      </div>
+      <div class="credit-item">
+        <span class="credit-role">Landscape Development:</span> <strong>@geethaaa</strong> and <strong>@cyberhawk_2999</strong> <span class="credit-note">(i did help kinda but not enough to come on the forefront)</span>
+      </div>
+      <div class="credit-item">
+        <span class="credit-role">Enjoyed by:</span> <strong>@everyone</strong> <span class="credit-note">(hopefully)</span>
+      </div>
+    </div>
+    <div class="thanks-banner">thanks for playing and enjoying!</div>
     <button type="button" class="btn" onclick="location.href='index.html'">return to the beginning</button>
   </div>
 </div>
 
 <script>
-// EDIT YOUR ELATION DIALOGUE LINES HERE
 const DIALOGUE_LINES = [
-  '[Placeholder] Well, well, well... you actually made it to the end, Arsonist.',
-  '[Placeholder] Replace these lines with whatever The Elation says in the finale!',
-  '[Placeholder] Hope you had a good laugh along the way.'
+  'Well, Well, Well\nLook who made it to the finale!\nWelcome home, my dear Arsonist.',
+  'So, have you found your Elation? The True Erudition?\nIt is simple, my dear.',
+  'It is nothing, but the journey, and the friends we made along the way <3',
+  'yes i did this thank you, you may kill me now'
 ];
 
 const elationTyped = document.getElementById('elationTyped');
@@ -167,7 +210,7 @@ async function playDialogue() {
       rendered += line[ci];
       elationTyped.textContent = rendered;
       const ch = line[ci];
-      const delay = ch === ',' ? 120 : (ch === '.' || ch === '!' || ch === '?') ? 210 : 38;
+      const delay = ch === ',' ? 120 : (ch === '.' || ch === '!' || ch === '?' || ch === '\n') ? 210 : 38;
       await sleep(delay);
     }
     if (li < DIALOGUE_LINES.length - 1) {
